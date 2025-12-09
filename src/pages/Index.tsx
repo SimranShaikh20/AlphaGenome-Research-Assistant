@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import { NetworkVisualization } from '@/components/NetworkVisualization';
 import { HypothesisGenerator } from '@/components/HypothesisGenerator';
 import { VoiceInteraction } from '@/components/VoiceInteraction';
 import { ResearchNotebook } from '@/components/ResearchNotebook';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 import {
   getSequenceStats,
   generateMockPredictions,
@@ -23,19 +24,28 @@ import {
 
 export default function Index() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [predictions, setPredictions] = useState<FunctionPrediction[]>([]);
   const [targetGenes, setTargetGenes] = useState<TargetGene[]>([]);
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([]);
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [currentSequence, setCurrentSequence] = useState('');
 
+  useEffect(() => {
+    if (isAnalyzing) {
+      const interval = setInterval(() => {
+        setProgress(prev => Math.min(prev + Math.random() * 15, 90));
+      }, 300);
+      return () => clearInterval(interval);
+    } else {
+      setProgress(0);
+    }
+  }, [isAnalyzing]);
+
   const handleAnalyze = useCallback(async (sequence: string) => {
     setIsAnalyzing(true);
     setCurrentSequence(sequence);
-    
-    toast.info('Analysis Started', {
-      description: 'Analyzing sequence with Gemini AI...',
-    });
+    setProgress(10);
 
     try {
       const sequenceStats = getSequenceStats(sequence);
@@ -44,15 +54,11 @@ export default function Index() {
         body: { sequence, sequenceStats },
       });
 
-      if (error) {
-        throw new Error(error.message || 'Analysis failed');
-      }
+      setProgress(100);
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (error) throw new Error(error.message || 'Analysis failed');
+      if (data.error) throw new Error(data.error);
 
-      // Process predictions
       const newPredictions: FunctionPrediction[] = (data.predictions || []).map((p: any, i: number) => ({
         id: p.id || `pred-${i}`,
         name: p.name,
@@ -63,7 +69,6 @@ export default function Index() {
         diseaseAssociations: p.diseaseAssociations || [],
       }));
 
-      // Process target genes
       const newTargetGenes: TargetGene[] = (data.targetGenes || []).map((g: any, i: number) => ({
         id: g.id || `gene-${i}`,
         name: g.name,
@@ -73,7 +78,6 @@ export default function Index() {
         description: g.description,
       }));
 
-      // Process hypotheses
       const newHypotheses: Hypothesis[] = (data.hypotheses || []).map((h: any, i: number) => ({
         id: h.id || `hyp-${i}`,
         statement: h.statement,
@@ -88,7 +92,6 @@ export default function Index() {
       setTargetGenes(newTargetGenes);
       setHypotheses(newHypotheses);
 
-      // Add to analysis history
       const newAnalysis: AnalysisResult = {
         id: Date.now().toString(),
         timestamp: new Date(),
@@ -102,16 +105,15 @@ export default function Index() {
 
       setAnalyses((prev) => [newAnalysis, ...prev]);
 
-      toast.success('Analysis Complete', {
-        description: `Found ${newPredictions.length} potential functions with ${newTargetGenes.length} target genes.`,
+      toast.success('Analysis Complete!', {
+        description: `Found ${newPredictions.length} functions with ${newTargetGenes.length} target genes.`,
       });
     } catch (err) {
       console.error('Analysis error:', err);
       toast.error('Analysis Failed', {
-        description: err instanceof Error ? err.message : 'An error occurred during analysis',
+        description: err instanceof Error ? err.message : 'An error occurred',
       });
       
-      // Fallback to mock data
       const newPredictions = generateMockPredictions(sequence);
       const newTargetGenes = generateMockTargetGenes();
       const newHypotheses = generateMockHypotheses(newPredictions);
@@ -128,10 +130,7 @@ export default function Index() {
       setAnalyses((prev) => {
         const updated = [...prev];
         if (updated[0]) {
-          updated[0] = {
-            ...updated[0],
-            voiceNotes: [...updated[0].voiceNotes, text],
-          };
+          updated[0] = { ...updated[0], voiceNotes: [...updated[0].voiceNotes, text] };
         }
         return updated;
       });
@@ -140,29 +139,39 @@ export default function Index() {
 
   const handleClearHistory = useCallback(() => {
     setAnalyses([]);
-    toast.info('History Cleared', {
-      description: 'All analysis records have been removed.',
-    });
+    toast.info('History cleared');
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="dna-watermark" />
       <Header />
+      
+      <LoadingOverlay isVisible={isAnalyzing} progress={progress} />
       
       <main className="container px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - Input */}
-          <div className="lg:col-span-3 space-y-4">
-            <SequenceInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
-            <VoiceInteraction onVoiceInput={handleVoiceInput} />
+          {/* Left Column */}
+          <div className="lg:col-span-3">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="panel-left"
+            >
+              <SequenceInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
+              <div className="mt-6">
+                <VoiceInteraction onVoiceInput={handleVoiceInput} />
+              </div>
+            </motion.div>
           </div>
 
-          {/* Center Column - Results */}
+          {/* Center Column */}
           <div className="lg:col-span-6 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
+              className="panel-center"
             >
               <PredictionsPanel predictions={predictions} isLoading={isAnalyzing} />
             </motion.div>
@@ -172,51 +181,34 @@ export default function Index() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <NetworkVisualization
-                targetGenes={targetGenes}
-                sequenceType={predictions[0]?.name}
-              />
+              <NetworkVisualization targetGenes={targetGenes} sequenceType={predictions[0]?.name} />
             </motion.div>
           </div>
 
-          {/* Right Column - Hypothesis & Notebook */}
-          <div className="lg:col-span-3 space-y-4">
+          {/* Right Column */}
+          <div className="lg:col-span-3 space-y-6">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
+              className="panel-right"
             >
               <HypothesisGenerator hypotheses={hypotheses} isLoading={isAnalyzing} />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="h-[350px]"
+              className="panel-right h-[350px]"
             >
               <ResearchNotebook analyses={analyses} onClearHistory={handleClearHistory} />
             </motion.div>
           </div>
         </div>
-
-        {/* Footer Info */}
-        <motion.footer
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12 text-center text-xs text-muted-foreground border-t border-border pt-6"
-        >
-          <p>
-            AlphaGenome Research Assistant • Non-coding DNA Analysis Platform
-          </p>
-          <p className="mt-1">
-            Powered by advanced AI for multimodal genomic analysis
-          </p>
-        </motion.footer>
       </main>
 
-      <Toaster position="bottom-right" />
+      <Toaster position="top-right" />
     </div>
   );
 }
