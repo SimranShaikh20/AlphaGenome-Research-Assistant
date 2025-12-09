@@ -17,13 +17,14 @@ export interface FunctionPrediction {
   category: string;
   confidence: number;
   mechanism: string;
-  evidence: string[];
+  evidence: string | string[];
   diseaseAssociations: string[];
 }
 
 export interface TargetGene {
   id: string;
   name: string;
+  fullName?: string;
   relationship: 'activation' | 'repression';
   strength: number;
   description: string;

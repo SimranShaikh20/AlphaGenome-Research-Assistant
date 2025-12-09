@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { SequenceInput } from '@/components/SequenceInput';
 import { PredictionsPanel } from '@/components/PredictionsPanel';
@@ -10,6 +11,7 @@ import { HypothesisGenerator } from '@/components/HypothesisGenerator';
 import { VoiceInteraction } from '@/components/VoiceInteraction';
 import { ResearchNotebook } from '@/components/ResearchNotebook';
 import {
+  getSequenceStats,
   generateMockPredictions,
   generateMockTargetGenes,
   generateMockHypotheses,
@@ -32,38 +34,93 @@ export default function Index() {
     setCurrentSequence(sequence);
     
     toast.info('Analysis Started', {
-      description: 'Analyzing sequence patterns and predicting functions...',
+      description: 'Analyzing sequence with Gemini AI...',
     });
 
-    // Simulate analysis delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      const sequenceStats = getSequenceStats(sequence);
+      
+      const { data, error } = await supabase.functions.invoke('analyze-dna', {
+        body: { sequence, sequenceStats },
+      });
 
-    const newPredictions = generateMockPredictions(sequence);
-    const newTargetGenes = generateMockTargetGenes();
-    const newHypotheses = generateMockHypotheses(newPredictions);
+      if (error) {
+        throw new Error(error.message || 'Analysis failed');
+      }
 
-    setPredictions(newPredictions);
-    setTargetGenes(newTargetGenes);
-    setHypotheses(newHypotheses);
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
-    // Add to analysis history
-    const newAnalysis: AnalysisResult = {
-      id: Date.now().toString(),
-      timestamp: new Date(),
-      sequence,
-      sequenceType: newPredictions[0]?.category || 'Unknown',
-      predictions: newPredictions,
-      targetGenes: newTargetGenes,
-      hypotheses: newHypotheses,
-      voiceNotes: [],
-    };
+      // Process predictions
+      const newPredictions: FunctionPrediction[] = (data.predictions || []).map((p: any, i: number) => ({
+        id: p.id || `pred-${i}`,
+        name: p.name,
+        category: p.category,
+        confidence: p.confidence,
+        mechanism: p.mechanism,
+        evidence: Array.isArray(p.evidence) ? p.evidence : [p.evidence],
+        diseaseAssociations: p.diseaseAssociations || [],
+      }));
 
-    setAnalyses((prev) => [newAnalysis, ...prev]);
-    setIsAnalyzing(false);
+      // Process target genes
+      const newTargetGenes: TargetGene[] = (data.targetGenes || []).map((g: any, i: number) => ({
+        id: g.id || `gene-${i}`,
+        name: g.name,
+        fullName: g.fullName,
+        relationship: g.relationship === 'repression' ? 'repression' : 'activation',
+        strength: g.strength || 0.5,
+        description: g.description,
+      }));
 
-    toast.success('Analysis Complete', {
-      description: `Found ${newPredictions.length} potential functions with ${newTargetGenes.length} target genes.`,
-    });
+      // Process hypotheses
+      const newHypotheses: Hypothesis[] = (data.hypotheses || []).map((h: any, i: number) => ({
+        id: h.id || `hyp-${i}`,
+        statement: h.statement,
+        experimentType: h.approach?.split(' ')[0] || 'Experiment',
+        approach: h.approach,
+        expectedOutcome: h.expectedOutcome,
+        resources: h.resources,
+        timeline: h.timeline,
+      }));
+
+      setPredictions(newPredictions);
+      setTargetGenes(newTargetGenes);
+      setHypotheses(newHypotheses);
+
+      // Add to analysis history
+      const newAnalysis: AnalysisResult = {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        sequence,
+        sequenceType: newPredictions[0]?.category || 'Unknown',
+        predictions: newPredictions,
+        targetGenes: newTargetGenes,
+        hypotheses: newHypotheses,
+        voiceNotes: [],
+      };
+
+      setAnalyses((prev) => [newAnalysis, ...prev]);
+
+      toast.success('Analysis Complete', {
+        description: `Found ${newPredictions.length} potential functions with ${newTargetGenes.length} target genes.`,
+      });
+    } catch (err) {
+      console.error('Analysis error:', err);
+      toast.error('Analysis Failed', {
+        description: err instanceof Error ? err.message : 'An error occurred during analysis',
+      });
+      
+      // Fallback to mock data
+      const newPredictions = generateMockPredictions(sequence);
+      const newTargetGenes = generateMockTargetGenes();
+      const newHypotheses = generateMockHypotheses(newPredictions);
+      setPredictions(newPredictions);
+      setTargetGenes(newTargetGenes);
+      setHypotheses(newHypotheses);
+    } finally {
+      setIsAnalyzing(false);
+    }
   }, []);
 
   const handleVoiceInput = useCallback((text: string) => {
