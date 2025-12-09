@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mic, MicOff, Send, Volume2, Loader2, User, Bot } from 'lucide-react';
+import { Mic, MicOff, Send, Loader2, User, Bot } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -18,6 +18,28 @@ interface VoiceInteractionProps {
   onVoiceInput: (text: string) => void;
 }
 
+function WaveformVisualization() {
+  return (
+    <div className="flex items-center justify-center gap-1 h-8">
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="w-1 bg-red-500 rounded-full"
+          animate={{ 
+            height: [8, 24, 8],
+          }}
+          transition={{ 
+            duration: 0.5, 
+            repeat: Infinity, 
+            delay: i * 0.05,
+            ease: 'easeInOut'
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,7 +48,7 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your AlphaGenome assistant. You can speak or type your observations about the analyzed sequence. I\'ll help refine predictions and suggest experiments.',
+      content: 'Hello! I\'m your AlphaGenome assistant. Speak or type your observations about the analyzed sequence.',
       timestamp: new Date(),
     },
   ]);
@@ -43,7 +65,6 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
       setIsRecording(false);
       setIsProcessing(true);
       
-      // Simulate voice processing
       setTimeout(() => {
         const transcribedText = 'The sequence appears to be active in liver tissue based on my preliminary data.';
         handleUserMessage(transcribedText, 'voice');
@@ -66,12 +87,11 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
     setMessages((prev) => [...prev, userMessage]);
     onVoiceInput(text);
     
-    // Simulate AI response
     setTimeout(() => {
       const responses = [
-        'Based on your observation about liver tissue activity, I\'ve updated the predictions. The sequence now shows increased confidence for hepatocyte-specific enhancer activity. I recommend performing a ChIP-seq for HNF4α to validate this hypothesis.',
-        'Interesting observation! This context helps narrow down the regulatory function. Consider that liver-specific enhancers often contain binding sites for HNF1α, HNF4α, and C/EBP family members. Should I search for these motifs in your sequence?',
-        'Thank you for this additional context. Liver-specific activity suggests potential involvement in metabolic gene regulation. I\'ve generated a new hypothesis focused on testing enhancer activity in HepG2 cells.',
+        'Based on your observation about liver tissue activity, I\'ve updated the predictions. Consider ChIP-seq for HNF4α to validate.',
+        'Interesting! Liver-specific enhancers often contain HNF1α, HNF4α, and C/EBP binding sites. Should I search for these motifs?',
+        'Thank you for this context. I\'ve generated a new hypothesis focused on testing enhancer activity in HepG2 cells.',
       ];
       
       const assistantMessage: Message = {
@@ -94,13 +114,55 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
   };
 
   return (
-    <div className="glass-panel p-4 flex flex-col h-full max-h-[400px]">
-      <div className="section-header">
-        <Volume2 className="w-4 h-4" />
-        Voice Interaction
+    <div className="space-y-4">
+      {/* Large microphone button */}
+      <div className="flex flex-col items-center">
+        <motion.button
+          onClick={toggleRecording}
+          disabled={isProcessing}
+          className={`mic-button ${isRecording ? 'mic-button-recording' : ''}`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {isRecording ? (
+            <MicOff className="w-8 h-8 text-white" />
+          ) : (
+            <Mic className="w-8 h-8 text-white" />
+          )}
+        </motion.button>
+        
+        <p className="text-sm text-muted-foreground mt-2">
+          {isRecording ? 'Listening...' : 'Tap to speak'}
+        </p>
+
+        {/* Waveform when recording */}
+        <AnimatePresence>
+          {isRecording && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3"
+            >
+              <WaveformVisualization />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {isProcessing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2 mt-3 text-primary"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Processing...</span>
+          </motion.div>
+        )}
       </div>
 
-      <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+      {/* Chat messages */}
+      <ScrollArea className="h-[200px] pr-3" ref={scrollRef}>
         <div className="space-y-3">
           <AnimatePresence>
             {messages.map((message) => (
@@ -119,7 +181,7 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                  className={`max-w-[85%] rounded-xl px-3 py-2 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
@@ -132,12 +194,6 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
                     </Badge>
                   )}
                   <p className="text-sm">{message.content}</p>
-                  <span className="text-[10px] opacity-60 mt-1 block">
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </span>
                 </div>
                 {message.role === 'user' && (
                   <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -150,60 +206,18 @@ export function VoiceInteraction({ onVoiceInput }: VoiceInteractionProps) {
         </div>
       </ScrollArea>
 
-      <div className="mt-4 space-y-2">
-        {isRecording && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-2 py-2 bg-destructive/10 rounded-lg text-destructive"
-          >
-            <div className="flex gap-1">
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="w-1 h-4 bg-destructive rounded-full"
-                  animate={{ scaleY: [1, 1.5, 1] }}
-                  transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                />
-              ))}
-            </div>
-            <span className="text-sm font-medium">Recording...</span>
-          </motion.div>
-        )}
-
-        {isProcessing && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-2 py-2 bg-muted rounded-lg"
-          >
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">Processing voice...</span>
-          </motion.div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Button
-            type="button"
-            variant={isRecording ? 'destructive' : 'secondary'}
-            size="icon"
-            onClick={toggleRecording}
-            disabled={isProcessing}
-            className={isRecording ? 'pulse-recording' : ''}
-          >
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </Button>
-          <Input
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type your observation..."
-            className="flex-1"
-          />
-          <Button type="submit" disabled={!inputText.trim()}>
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-      </div>
+      {/* Text input */}
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <Input
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="Type your observation..."
+          className="flex-1"
+        />
+        <Button type="submit" disabled={!inputText.trim()} size="icon">
+          <Send className="w-4 h-4" />
+        </Button>
+      </form>
     </div>
   );
 }

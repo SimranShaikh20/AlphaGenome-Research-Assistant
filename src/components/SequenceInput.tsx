@@ -2,18 +2,18 @@ import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Upload,
   FileText,
   Image,
-  Mic,
-  MicOff,
-  Play,
   Trash2,
-  ChevronDown,
   Check,
   AlertCircle,
+  Dna,
+  Heart,
+  Zap,
+  VolumeX,
+  Layers,
 } from 'lucide-react';
 import {
   validateSequence,
@@ -21,22 +21,29 @@ import {
   EXAMPLE_SEQUENCES,
   type SequenceValidation,
 } from '@/lib/dna-utils';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 
 interface SequenceInputProps {
   onAnalyze: (sequence: string) => void;
   isAnalyzing: boolean;
 }
 
+const exampleIcons = {
+  enhancer: Heart,
+  promoter: Zap,
+  silencer: VolumeX,
+  insulator: Layers,
+};
+
+const exampleColors = {
+  enhancer: 'example-card-green',
+  promoter: 'example-card-blue',
+  silencer: 'example-card-orange',
+  insulator: 'example-card-purple',
+};
+
 export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
   const [sequence, setSequence] = useState('');
   const [validation, setValidation] = useState<SequenceValidation | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,19 +71,6 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
 
   const handleExampleSelect = (exampleSequence: string) => {
     handleSequenceChange(exampleSequence);
-    setIsExamplesOpen(false);
-  };
-
-  const toggleRecording = () => {
-    if (isRecording) {
-      setIsRecording(false);
-    } else {
-      setIsRecording(true);
-      // Simulated voice input - in production, use Web Speech API
-      setTimeout(() => {
-        setIsRecording(false);
-      }, 3000);
-    }
   };
 
   const handleAnalyze = () => {
@@ -88,7 +82,8 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
   const stats = validation?.isValid ? getSequenceStats(validation.cleanedSequence) : null;
 
   return (
-    <div className="glass-panel p-4 space-y-4">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="section-header mb-0">
           <FileText className="w-4 h-4" />
@@ -129,35 +124,37 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
         </div>
       </div>
 
-      <div className="relative">
-        <Textarea
-          value={sequence}
-          onChange={(e) => handleSequenceChange(e.target.value)}
-          placeholder="Paste your DNA sequence here (FASTA format supported)...
-Example:
->sequence_name
-ATGCGTACGTAGCTAGCTGATCGATCG..."
-          className="input-scientific min-h-[140px] resize-none pr-10"
-        />
-        {sequence && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleSequenceChange('')}
-            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="w-3 h-3" />
-          </Button>
-        )}
+      {/* Textarea with gradient border on focus */}
+      <div className="input-gradient-focus rounded-xl">
+        <div className="relative">
+          <textarea
+            value={sequence}
+            onChange={(e) => handleSequenceChange(e.target.value)}
+            placeholder="Paste your DNA sequence here (FASTA format supported)...&#10;&#10;Example:&#10;>sequence_name&#10;ATGCGTACGTAGCTAGCTGATCGATCG..."
+            className="w-full h-[250px] bg-background border-2 border-border rounded-xl px-4 py-3 font-mono text-sm resize-none focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+            style={{ fontFamily: "'Monaco', 'Consolas', 'IBM Plex Mono', monospace" }}
+          />
+          {sequence && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleSequenceChange('')}
+              className="absolute top-3 right-3 h-7 w-7 text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
+      {/* Live character counter */}
       <AnimatePresence>
         {validation && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="space-y-2"
+            className="space-y-3"
           >
             <div className="flex items-center gap-2 flex-wrap">
               {validation.isValid ? (
@@ -174,109 +171,87 @@ ATGCGTACGTAGCTAGCTGATCGATCG..."
             </div>
 
             {stats && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="bg-muted/50 rounded-md p-2 text-center">
-                  <div className="text-muted-foreground">Length</div>
-                  <div className="font-mono font-semibold">{stats.length} bp</div>
-                </div>
-                <div className="bg-muted/50 rounded-md p-2 text-center">
-                  <div className="text-muted-foreground">GC Content</div>
-                  <div className="font-mono font-semibold">{stats.gcContent}%</div>
-                </div>
-                <div className="bg-muted/50 rounded-md p-2 text-center">
-                  <div className="text-muted-foreground">A/T Bases</div>
-                  <div className="font-mono">
-                    <span className="dna-base-a">{stats.aCount}</span>
-                    <span className="text-muted-foreground">/</span>
-                    <span className="dna-base-t">{stats.tCount}</span>
-                  </div>
-                </div>
-                <div className="bg-muted/50 rounded-md p-2 text-center">
-                  <div className="text-muted-foreground">G/C Bases</div>
-                  <div className="font-mono">
-                    <span className="dna-base-g">{stats.gCount}</span>
-                    <span className="text-muted-foreground">/</span>
-                    <span className="dna-base-c">{stats.cCount}</span>
-                  </div>
-                </div>
+              <div className="flex items-center justify-center gap-4 py-2 bg-muted/50 rounded-lg text-sm">
+                <span className="font-mono">
+                  <span className="text-muted-foreground">Length:</span>{' '}
+                  <span className="font-semibold text-foreground">{stats.length} bp</span>
+                </span>
+                <span className="text-border">|</span>
+                <span className="font-mono">
+                  <span className="text-muted-foreground">GC Content:</span>{' '}
+                  <span className="font-semibold text-foreground">{stats.gcContent}%</span>
+                </span>
               </div>
             )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <Collapsible open={isExamplesOpen} onOpenChange={setIsExamplesOpen}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between text-sm text-muted-foreground">
-            <span>Load Example Sequences</span>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${isExamplesOpen ? 'rotate-180' : ''}`}
-            />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-2">
-          <div className="grid gap-2">
-            {EXAMPLE_SEQUENCES.map((example) => (
-              <button
+      {/* Example Sequences as Cards */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">Load Example Sequences</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {EXAMPLE_SEQUENCES.map((example) => {
+            const IconComponent = exampleIcons[example.type as keyof typeof exampleIcons] || Dna;
+            const colorClass = exampleColors[example.type as keyof typeof exampleColors] || 'example-card-blue';
+            
+            return (
+              <motion.button
                 key={example.name}
                 onClick={() => handleExampleSelect(example.sequence)}
-                className="text-left p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
+                className={`example-card ${colorClass} text-left`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm">{example.name}</span>
-                  <Badge variant="secondary" className="text-xs capitalize">
-                    {example.type}
-                  </Badge>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <IconComponent className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm text-foreground truncate">{example.name}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{example.description}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{example.description}</p>
-              </button>
-            ))}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
 
-      <div className="flex gap-2">
-        <Button
-          variant={isRecording ? 'destructive' : 'secondary'}
-          size="sm"
-          onClick={toggleRecording}
-          className={isRecording ? 'pulse-recording' : ''}
-        >
-          {isRecording ? (
-            <>
-              <MicOff className="w-4 h-4 mr-1" />
-              Stop
-            </>
-          ) : (
-            <>
-              <Mic className="w-4 h-4 mr-1" />
-              Voice
-            </>
-          )}
-        </Button>
-
+      {/* Analyze Button */}
+      <motion.div
+        whileHover={!isAnalyzing && validation?.isValid ? { scale: 1.02 } : {}}
+        whileTap={!isAnalyzing && validation?.isValid ? { scale: 0.98 } : {}}
+      >
         <Button
           onClick={handleAnalyze}
           disabled={!validation?.isValid || isAnalyzing}
-          className="flex-1 btn-primary-glow bg-primary hover:bg-primary/90"
+          className={`w-full h-14 text-lg font-bold btn-gradient ${
+            validation?.isValid && !isAnalyzing ? 'btn-pulse' : ''
+          }`}
         >
           {isAnalyzing ? (
             <motion.div
-              className="flex items-center gap-2"
+              className="flex items-center gap-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              Analyzing...
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <Dna className="w-5 h-5" />
+              </motion.div>
+              <span>Analyzing Sequence...</span>
             </motion.div>
           ) : (
             <>
-              <Play className="w-4 h-4 mr-1" />
+              <Dna className="w-5 h-5 mr-2" />
               Analyze Sequence
             </>
           )}
         </Button>
-      </div>
+      </motion.div>
     </div>
   );
 }
