@@ -89,7 +89,7 @@ function PredictionCard({ prediction, index }: PredictionCardProps) {
               Evidence
             </h4>
             <ul className="space-y-1">
-              {prediction.evidence.map((item, i) => (
+              {(Array.isArray(prediction.evidence) ? prediction.evidence : [prediction.evidence]).map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-foreground/80">
                   <ChevronRight className="w-3 h-3 mt-1 text-primary shrink-0" />
                   <span>{item}</span>

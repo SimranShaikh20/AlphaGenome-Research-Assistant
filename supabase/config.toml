@@ -1,1 +1,4 @@
 project_id = "xrrrmdrspujtaebfhdmu"
+
+[functions.analyze-dna]
+verify_jwt = false
