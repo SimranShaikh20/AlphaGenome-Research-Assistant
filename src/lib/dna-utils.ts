@@ -9,6 +9,9 @@ export interface SequenceValidation {
   length: number;
   gcContent: number;
   invalidCharacters: string[];
+  error?: string;
+  wasConverted?: boolean; // RNA to DNA conversion happened
+  wasFasta?: boolean; // FASTA format detected
 }
 
 export interface FunctionPrediction {
@@ -51,34 +54,109 @@ export interface AnalysisResult {
   voiceNotes: string[];
 }
 
-export function validateSequence(input: string): SequenceValidation {
-  const cleaned = input.toUpperCase().replace(/\s+/g, '').replace(/[0-9]/g, '');
-  const validBases = new Set(DNA_BASES);
-  const invalidChars: string[] = [];
-  let gcCount = 0;
-  let validSequence = '';
+// Clean and preprocess sequence
+export function cleanSequence(input: string): { cleaned: string; wasConverted: boolean; wasFasta: boolean } {
+  let wasConverted = false;
+  let wasFasta = false;
+  
+  // Check for FASTA format
+  if (input.includes('>')) {
+    wasFasta = true;
+  }
+  
+  // Remove FASTA headers (lines starting with >)
+  let cleaned = input.split('\n')
+    .filter(line => !line.trim().startsWith('>'))
+    .join('');
+  
+  // Remove all whitespace
+  cleaned = cleaned.replace(/\s+/g, '');
+  
+  // Convert to uppercase
+  cleaned = cleaned.toUpperCase();
+  
+  // Check for RNA (U nucleotides) and convert to DNA
+  if (cleaned.includes('U')) {
+    wasConverted = true;
+    cleaned = cleaned.replace(/U/g, 'T');
+  }
+  
+  // Remove any remaining non-ATGC characters
+  cleaned = cleaned.replace(/[^ATGC]/g, '');
+  
+  return { cleaned, wasConverted, wasFasta };
+}
 
-  for (const char of cleaned) {
-    if (validBases.has(char as DNABase)) {
-      validSequence += char;
-      if (char === 'G' || char === 'C') {
-        gcCount++;
-      }
-    } else if (char !== '\n' && char !== '\r' && char !== '>') {
-      if (!invalidChars.includes(char)) {
-        invalidChars.push(char);
-      }
+// Validate sequence with detailed error messages
+export function validateSequence(input: string): SequenceValidation {
+  const { cleaned, wasConverted, wasFasta } = cleanSequence(input);
+  
+  // Find invalid characters in original (for display)
+  const originalUpper = input.toUpperCase().replace(/\s+/g, '').replace(/[>].*\n?/g, '');
+  const invalidChars: string[] = [];
+  for (const char of originalUpper) {
+    if (!['A', 'T', 'G', 'C', 'U'].includes(char) && !invalidChars.includes(char)) {
+      invalidChars.push(char);
     }
   }
-
-  const gcContent = validSequence.length > 0 ? (gcCount / validSequence.length) * 100 : 0;
-
+  
+  // Calculate GC content
+  let gcCount = 0;
+  for (const base of cleaned) {
+    if (base === 'G' || base === 'C') {
+      gcCount++;
+    }
+  }
+  const gcContent = cleaned.length > 0 ? (gcCount / cleaned.length) * 100 : 0;
+  
+  // Validation checks
+  if (cleaned.length === 0) {
+    return {
+      isValid: false,
+      cleanedSequence: '',
+      length: 0,
+      gcContent: 0,
+      invalidCharacters: invalidChars,
+      error: 'No valid DNA sequence found. Please use only A, T, G, C nucleotides.',
+      wasConverted,
+      wasFasta,
+    };
+  }
+  
+  if (cleaned.length < 50) {
+    return {
+      isValid: false,
+      cleanedSequence: cleaned,
+      length: cleaned.length,
+      gcContent: Math.round(gcContent * 10) / 10,
+      invalidCharacters: [],
+      error: `Sequence too short (${cleaned.length} bp). Minimum 50 base pairs required.`,
+      wasConverted,
+      wasFasta,
+    };
+  }
+  
+  if (cleaned.length > 10000) {
+    return {
+      isValid: false,
+      cleanedSequence: cleaned.substring(0, 10000),
+      length: cleaned.length,
+      gcContent: Math.round(gcContent * 10) / 10,
+      invalidCharacters: [],
+      error: `Sequence too long (${cleaned.length} bp). Maximum 10,000 base pairs allowed.`,
+      wasConverted,
+      wasFasta,
+    };
+  }
+  
   return {
-    isValid: invalidChars.length === 0 && validSequence.length > 0,
-    cleanedSequence: validSequence,
-    length: validSequence.length,
+    isValid: true,
+    cleanedSequence: cleaned,
+    length: cleaned.length,
     gcContent: Math.round(gcContent * 10) / 10,
-    invalidCharacters: invalidChars,
+    invalidCharacters: [],
+    wasConverted,
+    wasFasta,
   };
 }
 
