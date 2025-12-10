@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Sparkles } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Moon, Sun, Sparkles, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { ApiKeyModal } from './ApiKeyModal';
 
 function AnimatedDNAHelix() {
   return (
@@ -72,6 +73,7 @@ function Particle({ delay, left }: { delay: number; left: number }) {
 
 export function Header() {
   const [isDark, setIsDark] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -86,6 +88,8 @@ export function Header() {
   }));
 
   return (
+    <>
+      <ApiKeyModal open={showApiKeyModal} onOpenChange={setShowApiKeyModal} />
     <header className="relative w-full header-gradient overflow-hidden" style={{ height: '100px' }}>
       {/* Particle effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -126,8 +130,18 @@ export function Header() {
             className="bg-white/20 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">Powered by Gemini 3 Pro</span>
+            <span className="text-xs font-medium">Powered by Gemini</span>
           </Badge>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowApiKeyModal(true)}
+            className="text-white/80 hover:text-white hover:bg-white/10"
+            title="API Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
           
           <Button
             variant="ghost"
@@ -140,5 +154,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

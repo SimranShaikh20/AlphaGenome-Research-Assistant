@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { SequenceInput } from '@/components/SequenceInput';
 import { PredictionsPanel } from '@/components/PredictionsPanel';
@@ -11,6 +10,8 @@ import { HypothesisGenerator } from '@/components/HypothesisGenerator';
 import { VoiceInteraction } from '@/components/VoiceInteraction';
 import { ResearchNotebook } from '@/components/ResearchNotebook';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { getStoredApiKey } from '@/components/ApiKeyModal';
+import { analyzeSequenceWithGemini } from '@/lib/gemini-api';
 import {
   getSequenceStats,
   generateMockPredictions,
@@ -43,47 +44,60 @@ export default function Index() {
   }, [isAnalyzing]);
 
   const handleAnalyze = useCallback(async (sequence: string) => {
+    // Check for API key first
+    const apiKey = getStoredApiKey();
+    if (!apiKey) {
+      toast.error('API Key Required', {
+        description: 'Please set your Gemini API key in settings (gear icon in header).',
+      });
+      return;
+    }
+
+    if (!sequence.trim()) {
+      toast.error('No Sequence', {
+        description: 'Please enter a DNA sequence first.',
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     setCurrentSequence(sequence);
     setProgress(10);
 
     try {
-      const sequenceStats = getSequenceStats(sequence);
+      setProgress(30);
       
-      const { data, error } = await supabase.functions.invoke('analyze-dna', {
-        body: { sequence, sequenceStats },
-      });
+      // Call Gemini API directly
+      const data = await analyzeSequenceWithGemini(sequence, apiKey);
 
       setProgress(100);
 
-      if (error) throw new Error(error.message || 'Analysis failed');
-      if (data.error) throw new Error(data.error);
-
-      const newPredictions: FunctionPrediction[] = (data.predictions || []).map((p: any, i: number) => ({
-        id: p.id || `pred-${i}`,
+      // Map API response to our types
+      const newPredictions: FunctionPrediction[] = (data.predictions || []).map((p, i) => ({
+        id: `pred-${i}`,
         name: p.name,
         category: p.category,
         confidence: p.confidence,
         mechanism: p.mechanism,
-        evidence: Array.isArray(p.evidence) ? p.evidence : [p.evidence],
-        diseaseAssociations: p.diseaseAssociations || [],
+        evidence: p.evidence || [],
+        diseaseAssociations: p.diseases || [],
       }));
 
-      const newTargetGenes: TargetGene[] = (data.targetGenes || []).map((g: any, i: number) => ({
-        id: g.id || `gene-${i}`,
-        name: g.name,
-        fullName: g.fullName,
-        relationship: g.relationship === 'repression' ? 'repression' : 'activation',
-        strength: g.strength || 0.5,
-        description: g.description,
+      const newTargetGenes: TargetGene[] = (data.regulatory_network?.relationships || []).map((r, i) => ({
+        id: `gene-${i}`,
+        name: r.to,
+        fullName: r.to,
+        relationship: r.type === 'repression' ? 'repression' : 'activation',
+        strength: r.strength || 0.5,
+        description: `${r.type === 'activation' ? 'Activated' : 'Repressed'} by the analyzed sequence`,
       }));
 
-      const newHypotheses: Hypothesis[] = (data.hypotheses || []).map((h: any, i: number) => ({
-        id: h.id || `hyp-${i}`,
+      const newHypotheses: Hypothesis[] = (data.hypotheses || []).map((h, i) => ({
+        id: `hyp-${i}`,
         statement: h.statement,
-        experimentType: h.approach?.split(' ')[0] || 'Experiment',
-        approach: h.approach,
-        expectedOutcome: h.expectedOutcome,
+        experimentType: h.method?.split(' ')[0] || 'Experiment',
+        approach: h.method,
+        expectedOutcome: h.expected_outcome,
         resources: h.resources,
         timeline: h.timeline,
       }));
@@ -110,10 +124,18 @@ export default function Index() {
       });
     } catch (err) {
       console.error('Analysis error:', err);
+      
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      
       toast.error('Analysis Failed', {
-        description: err instanceof Error ? err.message : 'An error occurred',
+        description: errorMessage,
+        action: {
+          label: 'Retry',
+          onClick: () => handleAnalyze(sequence),
+        },
       });
       
+      // Fall back to mock data for demo purposes
       const newPredictions = generateMockPredictions(sequence);
       const newTargetGenes = generateMockTargetGenes();
       const newHypotheses = generateMockHypotheses(newPredictions);
