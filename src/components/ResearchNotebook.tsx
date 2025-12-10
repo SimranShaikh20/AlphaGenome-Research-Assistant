@@ -21,13 +21,23 @@ interface ResearchNotebookProps {
 
 export function ResearchNotebook({ analyses, onClearHistory }: ResearchNotebookProps) {
   const exportToJSON = () => {
-    const data = JSON.stringify(analyses, null, 2);
+    if (analyses.length === 0) return;
+    
+    // Create serializable data (Date objects need to be converted to strings)
+    const exportData = analyses.map(analysis => ({
+      ...analysis,
+      timestamp: analysis.timestamp.toISOString(),
+    }));
+    
+    const data = JSON.stringify(exportData, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `alphagenomic-research-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
