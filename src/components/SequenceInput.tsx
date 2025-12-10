@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
   Upload,
   FileText,
@@ -14,10 +15,10 @@ import {
   Zap,
   VolumeX,
   Layers,
+  Info,
 } from 'lucide-react';
 import {
   validateSequence,
-  getSequenceStats,
   EXAMPLE_SEQUENCES,
   type SequenceValidation,
 } from '@/lib/dna-utils';
@@ -44,18 +45,35 @@ const exampleColors = {
 export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
   const [sequence, setSequence] = useState('');
   const [validation, setValidation] = useState<SequenceValidation | null>(null);
+  const [lastNotification, setLastNotification] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSequenceChange = useCallback((value: string) => {
+  const handleSequenceChange = useCallback((value: string, showNotifications = true) => {
     setSequence(value);
     if (value.trim()) {
       const result = validateSequence(value);
       setValidation(result);
+      
+      // Show helpful notifications (only once per type)
+      if (showNotifications) {
+        if (result.wasConverted && lastNotification !== 'rna') {
+          toast.info('RNA sequence detected', {
+            description: 'Converted to DNA (U→T)',
+          });
+          setLastNotification('rna');
+        } else if (result.wasFasta && !result.wasConverted && lastNotification !== 'fasta') {
+          toast.info('FASTA format detected', {
+            description: 'Extracting sequence data...',
+          });
+          setLastNotification('fasta');
+        }
+      }
     } else {
       setValidation(null);
+      setLastNotification('');
     }
-  }, []);
+  }, [lastNotification]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -70,7 +88,7 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
   };
 
   const handleExampleSelect = (exampleSequence: string) => {
-    handleSequenceChange(exampleSequence);
+    handleSequenceChange(exampleSequence, false);
   };
 
   const handleAnalyze = () => {
@@ -78,8 +96,6 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
       onAnalyze(validation.cleanedSequence);
     }
   };
-
-  const stats = validation?.isValid ? getSequenceStats(validation.cleanedSequence) : null;
 
   return (
     <div className="space-y-5">
@@ -147,7 +163,13 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
         </div>
       </div>
 
-      {/* Live character counter */}
+      {/* Format info */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Info className="w-3 h-3" />
+        <span>Accepts DNA (ATGC) and RNA (AUGC) formats. Min 50 bp, max 10,000 bp.</span>
+      </div>
+
+      {/* Live validation feedback */}
       <AnimatePresence>
         {validation && (
           <motion.div
@@ -165,21 +187,36 @@ export function SequenceInput({ onAnalyze, isAnalyzing }: SequenceInputProps) {
               ) : (
                 <Badge variant="outline" className="text-destructive border-destructive/30 bg-destructive/10">
                   <AlertCircle className="w-3 h-3 mr-1" />
-                  Invalid Characters: {validation.invalidCharacters.join(', ')}
+                  {validation.error || `Invalid Characters: ${validation.invalidCharacters.join(', ')}`}
+                </Badge>
+              )}
+              
+              {validation.wasConverted && (
+                <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50 dark:bg-blue-950/30">
+                  RNA → DNA
+                </Badge>
+              )}
+              
+              {validation.wasFasta && (
+                <Badge variant="outline" className="text-purple-600 border-purple-300 bg-purple-50 dark:bg-purple-950/30">
+                  FASTA
                 </Badge>
               )}
             </div>
 
-            {stats && (
+            {/* Always show stats when we have a cleaned sequence */}
+            {validation.length > 0 && (
               <div className="flex items-center justify-center gap-4 py-2 bg-muted/50 rounded-lg text-sm">
                 <span className="font-mono">
                   <span className="text-muted-foreground">Length:</span>{' '}
-                  <span className="font-semibold text-foreground">{stats.length} bp</span>
+                  <span className={`font-semibold ${validation.isValid ? 'text-foreground' : 'text-amber-600'}`}>
+                    {validation.length} bp
+                  </span>
                 </span>
                 <span className="text-border">|</span>
                 <span className="font-mono">
                   <span className="text-muted-foreground">GC Content:</span>{' '}
-                  <span className="font-semibold text-foreground">{stats.gcContent}%</span>
+                  <span className="font-semibold text-foreground">{validation.gcContent}%</span>
                 </span>
               </div>
             )}
