@@ -450,6 +450,7 @@ SEQUENCE:
 OUTPUT FORMAT:
 Return as structured JSON with exact schema...
 ```
+---
 
 **Advanced Techniques:**
 - Few-shot learning with example sequences
@@ -457,32 +458,132 @@ Return as structured JSON with exact schema...
 - Temperature tuning (0.7) for balanced creativity/accuracy
 - Max tokens (2048) for comprehensive responses
 
-### Data Flow Architecture
-
-```
-User Input → Validation → Preprocessing → API Call → Response Parse → UI Render
-
-Detailed Steps:
-1. User pastes sequence / uploads file
-   ↓
-2. Client-side validation (length, characters)
-   ↓
-3. Clean sequence (remove spaces, convert U→T)
-   ↓
-4. Calculate basic statistics
-   ↓
-5. Construct Gemini API request
-   ↓
-6. POST to: generativelanguage.googleapis.com/v1beta/models/gemini-3-pro:generateContent
-   ↓
-7. Receive JSON response
-   ↓
-8. Parse predictions, networks, hypotheses
-   ↓
-9. Render results with animations
-   ↓
-10. Enable voice refinement loop
-```
+graph TD
+    Start([User Starts Analysis]) --> Input{Input Method?}
+    
+    Input -->|Paste Text| A[DNA Sequence Input]
+    Input -->|Upload File| B[File Upload .fasta/.txt]
+    Input -->|Load Example| C[Example Sequence]
+    
+    A --> Validate[Client-Side Validation]
+    B --> Validate
+    C --> Validate
+    
+    Validate --> Check{Valid?}
+    Check -->|No| Error1[Show Error Message]
+    Error1 --> Start
+    
+    Check -->|Yes| Clean[Preprocessing & Cleaning]
+    
+    Clean --> Clean1[Remove Whitespace & Newlines]
+    Clean1 --> Clean2[Convert to Uppercase]
+    Clean2 --> Clean3[Replace U → T RNA to DNA]
+    Clean3 --> Clean4[Remove Non-ATGC Characters]
+    
+    Clean4 --> Stats[Calculate Statistics]
+    
+    Stats --> Stats1[Sequence Length bp]
+    Stats --> Stats2[GC Content %]
+    Stats --> Stats3[Nucleotide Distribution]
+    Stats --> Stats4[Complexity Score]
+    
+    Stats1 --> Prompt[Construct Gemini API Prompt]
+    Stats2 --> Prompt
+    Stats3 --> Prompt
+    Stats4 --> Prompt
+    
+    Prompt --> Prompt1[Add Sequence Context]
+    Prompt1 --> Prompt2[Add Analysis Requirements]
+    Prompt2 --> Prompt3[Specify JSON Output Format]
+    Prompt3 --> Prompt4[Include Few-Shot Examples]
+    
+    Prompt4 --> API[POST to Gemini API]
+    API --> APIEndpoint["generativelanguage.googleapis.com
+    /v1beta/models/gemini-3-pro
+    :generateContent"]
+    
+    APIEndpoint --> Loading[Show Loading Animation]
+    Loading --> LoadAnim1[Spinning DNA Helix]
+    Loading --> LoadAnim2[Progress Bar 0-100%]
+    Loading --> LoadAnim3[Status Messages]
+    
+    APIEndpoint --> Response{API Response?}
+    
+    Response -->|Error 429| RateLimit[Rate Limit Exceeded]
+    Response -->|Error 401| AuthError[Invalid API Key]
+    Response -->|Error 500| ServerError[Server Error]
+    
+    RateLimit --> ErrorHandler[Display Error Message]
+    AuthError --> ErrorHandler
+    ServerError --> ErrorHandler
+    ErrorHandler --> Retry{Retry?}
+    Retry -->|Yes| API
+    Retry -->|No| End([End Analysis])
+    
+    Response -->|Success 200| Parse[Parse JSON Response]
+    
+    Parse --> Parse1[Extract Predictions Array]
+    Parse --> Parse2[Extract Network Data]
+    Parse --> Parse3[Extract Hypotheses]
+    Parse --> Parse4[Extract Statistics]
+    
+    Parse1 --> Structure[Structure Results Data]
+    Parse2 --> Structure
+    Parse3 --> Structure
+    Parse4 --> Structure
+    
+    Structure --> Render[Render UI Components]
+    
+    Render --> UI1[Function Prediction Cards]
+    Render --> UI2[Gene Regulatory Network]
+    Render --> UI3[Hypothesis Generator]
+    Render --> UI4[Statistics Dashboard]
+    
+    UI1 --> Animate1[Fade-In Animation]
+    UI2 --> Animate2[Network Graph Physics]
+    UI3 --> Animate3[Staggered Card Entry]
+    UI4 --> Animate4[Counter Animation]
+    
+    Animate1 --> Display[Display Complete Results]
+    Animate2 --> Display
+    Animate3 --> Display
+    Animate4 --> Display
+    
+    Display --> Voice{Voice Input?}
+    
+    Voice -->|No| Export{Export Results?}
+    
+    Voice -->|Yes| VoiceInput[Activate Microphone]
+    VoiceInput --> VoiceRecord[Record User Observation]
+    VoiceRecord --> VoiceTranscribe[Transcribe Speech to Text]
+    VoiceTranscribe --> VoiceContext[Add to Analysis Context]
+    VoiceContext --> VoicePrompt[Construct Refinement Prompt]
+    VoicePrompt --> API
+    
+    Export -->|Yes| ExportType{Export Format?}
+    ExportType -->|PDF| PDF[Generate PDF Report]
+    ExportType -->|JSON| JSON[Export JSON Data]
+    ExportType -->|PNG| PNG[Save Network Image]
+    ExportType -->|CSV| CSV[Export CSV Table]
+    
+    PDF --> Download[Download File]
+    JSON --> Download
+    PNG --> Download
+    CSV --> Download
+    
+    Export -->|No| NewAnalysis{New Analysis?}
+    Download --> NewAnalysis
+    
+    NewAnalysis -->|Yes| Start
+    NewAnalysis -->|No| End
+    
+    style Start fill:#4ade80,stroke:#22c55e,stroke-width:3px
+    style End fill:#f87171,stroke:#ef4444,stroke-width:3px
+    style API fill:#60a5fa,stroke:#3b82f6,stroke-width:2px
+    style Render fill:#a78bfa,stroke:#8b5cf6,stroke-width:2px
+    style Display fill:#34d399,stroke:#10b981,stroke-width:2px
+---
+    
 
 ### Performance Optimizations
 
@@ -897,78 +998,6 @@ POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generate
     "topK": 40
   }
 }
-```
-
-**Response Handling:**
-```javascript
-const parseGeminiResponse = (response) => {
-  const text = response.candidates[0].content.parts[0].text;
-  
-  // Remove markdown formatting
-  const cleanText = text.replace(/```json\n?/g, '').replace(/```/g, '');
-  
-  // Parse JSON
-  const data = JSON.parse(cleanText);
-  
-  return {
-    predictions: data.predictions,
-    networks: data.regulatory_network,
-    hypotheses: data.hypotheses,
-    statistics: data.sequence_stats
-  };
-};
-```
-
-### Error Handling
-
-```javascript
-try {
-  const result = await analyzeSequence(sequence);
-} catch (error) {
-  if (error.status === 429) {
-    // Rate limit exceeded
-    showMessage("Too many requests. Please wait a moment.");
-  } else if (error.status === 401) {
-    // Invalid API key
-    showMessage("Invalid API key. Please check your settings.");
-  } else {
-    // General error
-    showMessage("Analysis failed. Please try again.");
-  }
-}
-```
-
-### Rate Limiting
-
-**Free Tier Limits:**
-- 60 requests per minute
-- 1,500 requests per day
-
-**Implementation:**
-```javascript
-class RateLimiter {
-  constructor(requestsPerMinute = 60) {
-    this.limit = requestsPerMinute;
-    this.requests = [];
-  }
-  
-  async throttle() {
-    const now = Date.now();
-    this.requests = this.requests.filter(t => now - t < 60000);
-    
-    if (this.requests.length >= this.limit) {
-      const waitTime = 60000 - (now - this.requests[0]);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-    
-    this.requests.push(now);
-  }
-}
-
-// Usage
-const limiter = new RateLimiter(60);
-await limiter.throttle();
-const result = await analyzeSequence(sequence);
 ```
 
 ---
