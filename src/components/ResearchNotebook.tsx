@@ -23,22 +23,35 @@ export function ResearchNotebook({ analyses, onClearHistory }: ResearchNotebookP
   const exportToJSON = () => {
     if (analyses.length === 0) return;
     
-    // Create serializable data (Date objects need to be converted to strings)
-    const exportData = analyses.map(analysis => ({
-      ...analysis,
-      timestamp: analysis.timestamp.toISOString(),
-    }));
-    
-    const data = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `alphagenomic-research-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Create serializable data (Date objects need to be converted to strings)
+      const exportData = analyses.map(analysis => ({
+        ...analysis,
+        timestamp: analysis.timestamp instanceof Date 
+          ? analysis.timestamp.toISOString() 
+          : new Date(analysis.timestamp).toISOString(),
+      }));
+      
+      const data = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `alphagenomic-research-${new Date().toISOString().split('T')[0]}.json`;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
   };
 
   return (
