@@ -498,6 +498,4 @@ If you find this project useful, please ⭐ star it on GitHub!
 - **Issues:** [GitHub Issues](https://github.com/SimranShaikh20/AlphaGenome-Research-Assistant/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/SimranShaikh20/AlphaGenome-Research-Assistant/discussions)
 
----
 
-*Last Updated: December 2025*
