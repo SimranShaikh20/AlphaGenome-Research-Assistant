@@ -8,27 +8,6 @@
 
 ---
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [The Scientific Challenge](#the-scientific-challenge)
-- [Research Background](#research-background)
-- [Solution Architecture](#solution-architecture)
-- [Key Features](#key-features)
-- [Technical Implementation](#technical-implementation)
-- [How It Works](#how-it-works)
-- [Installation & Setup](#installation--setup)
-- [Usage Guide](#usage-guide)
-- [API Integration](#api-integration)
-- [Scientific Validation](#scientific-validation)
-- [Impact & Applications](#impact--applications)
-- [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-
----
-
 ## 🎯 Overview
 
 The AlphaGenome Research Assistant is an AI-powered web application that revolutionizes non-coding DNA sequence analysis by addressing one of genomic science's most challenging problems: **predicting multiple valid functions for regulatory DNA sequences**.
