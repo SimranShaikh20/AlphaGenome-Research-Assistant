@@ -278,7 +278,7 @@
   }
 
   .btn-pulse {
-    animation: pulse-button 2s ease-in-out infinite;
+    animation: pulse-button 3s ease-in-out infinite;
   }
 
   .confidence-high {
@@ -515,10 +515,10 @@
 
 @keyframes pulse-button {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(221 83% 53% / 0.4);
+    box-shadow: 0 0 0 0 hsl(221 83% 53% / 0.2);
   }
   50% {
-    box-shadow: 0 0 0 15px hsl(221 83% 53% / 0);
+    box-shadow: 0 0 0 8px hsl(221 83% 53% / 0);
   }
 }
 
