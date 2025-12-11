@@ -8,19 +8,15 @@ import { PredictionsPanel } from '@/components/PredictionsPanel';
 import { NetworkVisualization } from '@/components/NetworkVisualization';
 import { HypothesisGenerator } from '@/components/HypothesisGenerator';
 import { VoiceInteraction } from '@/components/VoiceInteraction';
-import { ResearchNotebook } from '@/components/ResearchNotebook';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
-import { getStoredApiKey } from '@/components/ApiKeyModal';
-import { analyzeSequenceWithGemini } from '@/lib/gemini-api';
+import { supabase } from '@/integrations/supabase/client';
 import {
-  getSequenceStats,
   generateMockPredictions,
   generateMockTargetGenes,
   generateMockHypotheses,
   type FunctionPrediction,
   type TargetGene,
   type Hypothesis,
-  type AnalysisResult,
 } from '@/lib/dna-utils';
 
 export default function Index() {
@@ -29,8 +25,6 @@ export default function Index() {
   const [predictions, setPredictions] = useState<FunctionPrediction[]>([]);
   const [targetGenes, setTargetGenes] = useState<TargetGene[]>([]);
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([]);
-  const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
-  const [currentSequence, setCurrentSequence] = useState('');
 
   useEffect(() => {
     if (isAnalyzing) {
@@ -44,15 +38,6 @@ export default function Index() {
   }, [isAnalyzing]);
 
   const handleAnalyze = useCallback(async (sequence: string) => {
-    // Check for API key first
-    const apiKey = getStoredApiKey();
-    if (!apiKey) {
-      toast.error('API Key Required', {
-        description: 'Please set your Gemini API key in settings (gear icon in header).',
-      });
-      return;
-    }
-
     if (!sequence.trim()) {
       toast.error('No Sequence', {
         description: 'Please enter a DNA sequence first.',
@@ -61,19 +46,28 @@ export default function Index() {
     }
 
     setIsAnalyzing(true);
-    setCurrentSequence(sequence);
     setProgress(10);
 
     try {
       setProgress(30);
       
-      // Call Gemini API directly
-      const data = await analyzeSequenceWithGemini(sequence, apiKey);
+      // Call edge function
+      const { data, error } = await supabase.functions.invoke('analyze-dna', {
+        body: { sequence }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Analysis failed');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       setProgress(100);
 
       // Map API response to our types
-      const newPredictions: FunctionPrediction[] = (data.predictions || []).map((p, i) => ({
+      const newPredictions: FunctionPrediction[] = (data.predictions || []).map((p: any, i: number) => ({
         id: `pred-${i}`,
         name: p.name,
         category: p.category,
@@ -83,7 +77,7 @@ export default function Index() {
         diseaseAssociations: p.diseases || [],
       }));
 
-      const newTargetGenes: TargetGene[] = (data.regulatory_network?.relationships || []).map((r, i) => ({
+      const newTargetGenes: TargetGene[] = (data.regulatory_network?.relationships || []).map((r: any, i: number) => ({
         id: `gene-${i}`,
         name: r.to,
         fullName: r.to,
@@ -92,7 +86,7 @@ export default function Index() {
         description: `${r.type === 'activation' ? 'Activated' : 'Repressed'} by the analyzed sequence`,
       }));
 
-      const newHypotheses: Hypothesis[] = (data.hypotheses || []).map((h, i) => ({
+      const newHypotheses: Hypothesis[] = (data.hypotheses || []).map((h: any, i: number) => ({
         id: `hyp-${i}`,
         statement: h.statement,
         experimentType: h.method?.split(' ')[0] || 'Experiment',
@@ -106,19 +100,6 @@ export default function Index() {
       setTargetGenes(newTargetGenes);
       setHypotheses(newHypotheses);
 
-      const newAnalysis: AnalysisResult = {
-        id: Date.now().toString(),
-        timestamp: new Date(),
-        sequence,
-        sequenceType: newPredictions[0]?.category || 'Unknown',
-        predictions: newPredictions,
-        targetGenes: newTargetGenes,
-        hypotheses: newHypotheses,
-        voiceNotes: [],
-      };
-
-      setAnalyses((prev) => [newAnalysis, ...prev]);
-
       toast.success('Analysis Complete!', {
         description: `Found ${newPredictions.length} functions with ${newTargetGenes.length} target genes.`,
       });
@@ -129,10 +110,6 @@ export default function Index() {
       
       toast.error('Analysis Failed', {
         description: errorMessage,
-        action: {
-          label: 'Retry',
-          onClick: () => handleAnalyze(sequence),
-        },
       });
       
       // Fall back to mock data for demo purposes
@@ -148,20 +125,9 @@ export default function Index() {
   }, []);
 
   const handleVoiceInput = useCallback((text: string) => {
-    if (analyses.length > 0) {
-      setAnalyses((prev) => {
-        const updated = [...prev];
-        if (updated[0]) {
-          updated[0] = { ...updated[0], voiceNotes: [...updated[0].voiceNotes, text] };
-        }
-        return updated;
-      });
-    }
-  }, [analyses.length]);
-
-  const handleClearHistory = useCallback(() => {
-    setAnalyses([]);
-    toast.info('History cleared');
+    toast.info('Voice note recorded', {
+      description: text.substring(0, 50) + '...',
+    });
   }, []);
 
   return (
@@ -208,7 +174,7 @@ export default function Index() {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -216,15 +182,6 @@ export default function Index() {
               className="panel-right"
             >
               <HypothesisGenerator hypotheses={hypotheses} isLoading={isAnalyzing} />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="panel-right h-[350px]"
-            >
-              <ResearchNotebook analyses={analyses} onClearHistory={handleClearHistory} />
             </motion.div>
           </div>
         </div>
