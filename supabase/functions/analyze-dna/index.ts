@@ -1,128 +1,133 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured');
-    }
-
-    const { sequence, sequenceStats } = await req.json();
-
+    const { sequence } = await req.json();
+    
     if (!sequence) {
-      throw new Error('No sequence provided');
+      return new Response(
+        JSON.stringify({ error: "No sequence provided" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const prompt = `You are an expert genomics researcher analyzing non-coding DNA sequences. Analyze this DNA sequence and predict its potential functions.
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
 
-DNA Sequence (${sequenceStats?.length || sequence.length} bp, GC content: ${sequenceStats?.gcContent || 'unknown'}%):
-${sequence.substring(0, 500)}${sequence.length > 500 ? '...' : ''}
+    const prompt = `You are a genomics expert. Analyze this DNA sequence and predict its functions.
 
-Provide your analysis in the following JSON format ONLY (no other text):
+DNA Sequence: ${sequence}
+
+Provide a detailed analysis in JSON format:
 {
+  "sequence_stats": {
+    "length": <number>,
+    "gc_content": <percentage as number>
+  },
   "predictions": [
     {
-      "id": "unique_id",
-      "name": "Function name",
-      "category": "Category (e.g., Gene Regulation, RNA Processing, Chromatin Structure)",
-      "confidence": 85,
-      "mechanism": "Detailed biological mechanism explanation",
-      "evidence": "Supporting evidence from sequence patterns",
-      "diseaseAssociations": ["Disease 1", "Disease 2"]
+      "name": "<function name>",
+      "confidence": <0-100>,
+      "category": "<Gene Regulation|RNA Processing|Chromatin Structure|Epigenetic Regulation>",
+      "mechanism": "<detailed 3-4 sentence explanation>",
+      "evidence": ["<evidence 1>", "<evidence 2>", "<evidence 3>"],
+      "diseases": ["<disease 1>", "<disease 2>"]
     }
   ],
-  "targetGenes": [
-    {
-      "id": "gene_id",
-      "name": "Gene Symbol",
-      "fullName": "Full gene name",
-      "relationship": "activation or repression",
-      "strength": 0.8,
-      "description": "How this sequence might regulate this gene"
-    }
-  ],
+  "regulatory_network": {
+    "genes": ["<gene1>", "<gene2>", "<gene3>", "<gene4>", "<gene5>"],
+    "relationships": [
+      {"from": "DNA_SEQUENCE", "to": "<gene>", "type": "activation", "strength": <0-1>}
+    ]
+  },
   "hypotheses": [
     {
-      "id": "hyp_id",
-      "statement": "Clear hypothesis statement",
-      "approach": "Suggested experimental approach",
-      "expectedOutcome": "What results would support/refute this",
-      "resources": "Required resources",
-      "timeline": "Estimated timeline"
+      "statement": "<hypothesis>",
+      "method": "<experimental approach>",
+      "expected_outcome": "<outcome>",
+      "resources": "<what's needed>",
+      "timeline": "<time estimate>"
     }
   ]
 }
 
-Provide 3-5 function predictions with varying confidence levels, 4-6 target genes, and 3-4 testable hypotheses. Be scientifically accurate and specific.`;
+Return ONLY valid JSON, no markdown formatting or code blocks.`;
 
-    console.log('Calling Gemini API...');
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 4096,
-          }
-        }),
-      }
-    );
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You are a genomics expert. Always respond with valid JSON only, no markdown." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 4096,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      throw new Error(`Gemini API error: ${response.status}`);
+      console.error("AI Gateway error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Gemini response received');
+    const content = data.choices?.[0]?.message?.content;
 
-    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!textContent) {
-      throw new Error('No content in Gemini response');
+    if (!content) {
+      throw new Error("No content in AI response");
     }
 
-    // Extract JSON from response
-    const jsonMatch = textContent.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse JSON from response');
+    // Clean up markdown if present
+    let jsonText = content.trim();
+    jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    try {
+      const analysisResult = JSON.parse(jsonText);
+      return new Response(
+        JSON.stringify(analysisResult),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError, "Raw:", jsonText);
+      throw new Error("Failed to parse AI response");
     }
 
-    const analysisResult = JSON.parse(jsonMatch[0]);
-
-    return new Response(JSON.stringify(analysisResult), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
-  } catch (error: unknown) {
-    console.error('Error in analyze-dna function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  } catch (error) {
+    console.error("Analysis error:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : "Analysis failed" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

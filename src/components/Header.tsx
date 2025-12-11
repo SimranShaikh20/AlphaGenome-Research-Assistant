@@ -1,9 +1,8 @@
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Sparkles, Settings } from 'lucide-react';
+import { Moon, Sun, Sparkles } from 'lucide-react';
 import { useState } from 'react';
-import { ApiKeyModal } from './ApiKeyModal';
 
 function AnimatedDNAHelix() {
   return (
@@ -73,7 +72,6 @@ function Particle({ delay, left }: { delay: number; left: number }) {
 
 export function Header() {
   const [isDark, setIsDark] = useState(false);
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -88,72 +86,59 @@ export function Header() {
   }));
 
   return (
-    <>
-      <ApiKeyModal open={showApiKeyModal} onOpenChange={setShowApiKeyModal} />
-      <header className="relative w-full header-gradient overflow-hidden py-4" style={{ minHeight: '120px' }}>
-        {/* Particle effects */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {particles.map((particle) => (
-            <Particle key={particle.id} delay={particle.delay} left={particle.left} />
-          ))}
+    <header className="relative w-full header-gradient overflow-hidden py-4" style={{ minHeight: '120px' }}>
+      {/* Particle effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((particle) => (
+          <Particle key={particle.id} delay={particle.delay} left={particle.left} />
+        ))}
+      </div>
+
+      <div className="container h-full flex items-center justify-between px-6 relative z-10">
+        {/* Left spacer for balance */}
+        <div className="w-32 hidden md:block" />
+
+        {/* Center content */}
+        <div className="flex flex-col items-center gap-1">
+          <AnimatedDNAHelix />
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-white font-bold text-center"
+            style={{ fontSize: '24px' }}
+          >
+            AlphaGenome Research Assistant
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.9 }}
+            transition={{ delay: 0.2 }}
+            className="text-white/90 text-center"
+            style={{ fontSize: '13px' }}
+          >
+            Non-coding DNA Analysis Platform
+          </motion.p>
         </div>
 
-        <div className="container h-full flex items-center justify-between px-6 relative z-10">
-          {/* Left spacer for balance */}
-          <div className="w-48 hidden md:block" />
-
-          {/* Center content */}
-          <div className="flex flex-col items-center gap-1">
-            <AnimatedDNAHelix />
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-white font-bold text-center"
-              style={{ fontSize: '24px' }}
-            >
-              AlphaGenome Research Assistant
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.9 }}
-              transition={{ delay: 0.2 }}
-              className="text-white/90 text-center"
-              style={{ fontSize: '13px' }}
-            >
-              Non-coding DNA Analysis Platform
-            </motion.p>
-          </div>
-
-          {/* Right side with badge and controls */}
-          <div className="flex items-center gap-2 w-48 justify-end">
-            <Badge 
-              className="bg-white/20 text-white border-white/30 backdrop-blur-sm hidden sm:flex items-center gap-1.5 px-2 py-1"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span className="text-xs font-medium">Gemini</span>
-            </Badge>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowApiKeyModal(true)}
-              className="text-white/80 hover:text-white hover:bg-white/10"
-              title="API Settings"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="text-white/80 hover:text-white hover:bg-white/10"
-            >
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-          </div>
+        {/* Right side with badge and controls */}
+        <div className="flex items-center gap-2 w-32 justify-end">
+          <Badge 
+            className="bg-white/20 text-white border-white/30 backdrop-blur-sm hidden sm:flex items-center gap-1.5 px-2 py-1"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span className="text-xs font-medium">AI Powered</span>
+          </Badge>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="text-white/80 hover:text-white hover:bg-white/10"
+          >
+            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
         </div>
-      </header>
-    </>
+      </div>
+    </header>
   );
 }
