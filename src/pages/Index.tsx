@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { SequenceInput } from '@/components/SequenceInput';
 import { PredictionsPanel } from '@/components/PredictionsPanel';
-import { NetworkVisualization } from '@/components/NetworkVisualization';
+import { NetworkVisualization, NetworkVisualizationRef } from '@/components/NetworkVisualization';
 import { HypothesisGenerator } from '@/components/HypothesisGenerator';
 import { VoiceInteraction } from '@/components/VoiceInteraction';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
@@ -26,7 +26,7 @@ export default function Index() {
   const [predictions, setPredictions] = useState<FunctionPrediction[]>([]);
   const [targetGenes, setTargetGenes] = useState<TargetGene[]>([]);
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([]);
-
+  const networkRef = useRef<NetworkVisualizationRef>(null);
   useEffect(() => {
     if (isAnalyzing) {
       const interval = setInterval(() => {
@@ -154,6 +154,7 @@ export default function Index() {
                   targetGenes={targetGenes}
                   hypotheses={hypotheses}
                   disabled={isAnalyzing}
+                  networkSvgRef={{ current: networkRef.current?.getSvgRef() ?? null } as React.RefObject<SVGSVGElement>}
                 />
               </div>
               <div className="mt-4">
@@ -178,7 +179,7 @@ export default function Index() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <NetworkVisualization targetGenes={targetGenes} sequenceType={predictions[0]?.name} />
+              <NetworkVisualization ref={networkRef} targetGenes={targetGenes} sequenceType={predictions[0]?.name} />
             </motion.div>
           </div>
 
