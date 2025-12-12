@@ -9,6 +9,7 @@ import { NetworkVisualization } from '@/components/NetworkVisualization';
 import { HypothesisGenerator } from '@/components/HypothesisGenerator';
 import { VoiceInteraction } from '@/components/VoiceInteraction';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { ExportButton } from '@/components/ExportButton';
 import { supabase } from '@/integrations/supabase/client';
 import {
   generateMockPredictions,
@@ -147,7 +148,15 @@ export default function Index() {
               className="panel-left"
             >
               <SequenceInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
-              <div className="mt-6">
+              <div className="mt-4">
+                <ExportButton 
+                  predictions={predictions}
+                  targetGenes={targetGenes}
+                  hypotheses={hypotheses}
+                  disabled={isAnalyzing}
+                />
+              </div>
+              <div className="mt-4">
                 <VoiceInteraction onVoiceInput={handleVoiceInput} />
               </div>
             </motion.div>
