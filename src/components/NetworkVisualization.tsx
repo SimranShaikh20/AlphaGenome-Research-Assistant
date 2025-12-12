@@ -240,17 +240,12 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
             </TooltipContent>
           </Tooltip>
 
-          {/* Gene nodes - larger circles with adaptive text */}
+          {/* Gene nodes - larger green circles */}
           {nodes.genes.map((gene, index) => {
             const isActivation = gene.relationship === 'activation';
             const nodeColor = isActivation 
               ? 'hsl(155 70% 50%)' 
               : 'hsl(0 70% 55%)';
-            
-            // Calculate dynamic radius and font size based on text length
-            const textLength = gene.name.length;
-            const nodeRadius = Math.max(30, textLength * 4.5);
-            const fontSize = textLength > 8 ? 9 : textLength > 5 ? 10 : 12;
             
             return (
               <Tooltip key={gene.id}>
@@ -268,7 +263,7 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
                     <circle
                       cx={gene.x}
                       cy={gene.y}
-                      r={nodeRadius}
+                      r={25}
                       fill={nodeColor}
                       opacity={0.95}
                     />
@@ -278,9 +273,8 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
                       textAnchor="middle"
                       dominantBaseline="middle"
                       fill="white"
-                      fontSize={fontSize}
+                      fontSize="11"
                       fontWeight="600"
-                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
                     >
                       {gene.name}
                     </text>
