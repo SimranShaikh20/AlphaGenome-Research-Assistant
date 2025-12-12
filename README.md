@@ -280,11 +280,105 @@ flowchart TD
 
 ### 3. 🕸️ Gene Regulatory Network Visualization
 
-**Features:**
-- Interactive force-directed graph
-- Color-coded relationships (green=activation, red=repression)
-- Hover tooltips with gene information
-- Export as PNG/SVG
+**The Heart of Genomic Insights** — Understanding how genes interact is crucial for deciphering biological systems. Our interactive network visualization transforms complex regulatory data into intuitive, actionable insights.
+
+#### Visual Design
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │     Gene Regulatory Network             │
+                    │                                         │
+                    │           🟢 GATA4                       │
+                    │          ╱    (Activation)              │
+                    │         ╱                                │
+                    │    ┌───────┐                            │
+                    │    │  DNA  │──────→ 🟢 NKX2-5           │
+                    │    │SEQUENCE│        (Activation)        │
+                    │    └───────┘                            │
+                    │         ╲                                │
+                    │          ╲                               │
+                    │           🔴 TP53                        │
+                    │              (Repression)               │
+                    │                                         │
+                    │  Legend: 🟢 Activation  🔴 Repression    │
+                    └─────────────────────────────────────────┘
+```
+
+#### Interactive Features
+
+| Feature | Description | Benefit |
+|---------|-------------|---------|
+| 🔍 **Zoom Controls** | Zoom in/out (50%-200%) with smooth transitions | Focus on specific gene clusters |
+| 🎯 **Node Selection** | Click genes to highlight connections | Isolate pathways of interest |
+| 🔄 **Reset View** | One-click return to default state | Quick navigation |
+| 📥 **Download SVG** | Export high-resolution vector graphic | Publication-ready figures |
+| 💡 **Hover Tooltips** | Detailed gene info on hover | Quick reference without clutter |
+
+#### Network Elements Explained
+
+**Central Node (DNA Sequence):**
+```
+┌─────────────────────────────────────┐
+│  🔵 Gradient Blue-Purple Circle     │
+│  • Represents the analyzed sequence │
+│  • Shows "DNA SEQUENCE" label       │
+│  • Glowing effect for emphasis      │
+│  • All connections radiate outward  │
+└─────────────────────────────────────┘
+```
+
+**Gene Nodes:**
+```
+┌─────────────────────────────────────┐
+│  🟢 Green Circle = Activation       │
+│  • Genes upregulated by sequence    │
+│  • Stronger color = higher strength │
+│  • Gene symbol displayed in center  │
+│                                     │
+│  🔴 Red Circle = Repression         │
+│  • Genes downregulated by sequence  │
+│  • Visual distinction for quick ID  │
+│  • Click to see full description    │
+└─────────────────────────────────────┘
+```
+
+**Connection Lines:**
+```
+┌─────────────────────────────────────┐
+│  Line Thickness = Interaction       │
+│                   Strength          │
+│                                     │
+│  ━━━━━━━━ Strong (80-100%)         │
+│  ────────  Medium (50-79%)          │
+│  - - - -   Weak (< 50%)             │
+│                                     │
+│  Arrow Direction = Regulatory Flow  │
+│  DNA → Gene = Sequence regulates    │
+└─────────────────────────────────────┘
+```
+
+#### Why Network Visualization Matters
+
+| Research Need | How Network Helps |
+|---------------|-------------------|
+| 🧪 **Pathway Discovery** | Identify gene clusters regulated together |
+| 💊 **Drug Targeting** | Find hub genes with multiple connections |
+| 🔬 **Experiment Design** | Prioritize high-strength interactions |
+| 📝 **Publication Figures** | Export ready-to-publish diagrams |
+| 🎓 **Teaching** | Visual learning for complex biology |
+
+#### Download Capabilities
+
+**SVG Export (Individual Chart):**
+- Click 📥 button in network panel
+- Vector format scales infinitely
+- Editable in Illustrator/Inkscape
+- Perfect for journal submissions
+
+**PDF Export (Complete Report):**
+- Includes network as embedded image
+- Maintains visual quality at any zoom
+- Bundled with all analysis data
 
 ### 4. 💡 Automated Hypothesis Generator
 
@@ -323,87 +417,244 @@ flowchart TD
 
 **NEW FEATURE:** Generate professional, publication-ready PDF reports with complete analysis results.
 
-**What's Included in the PDF:**
+#### Why PDF Export is Essential for Researchers
 
-| Section | Description |
-|---------|-------------|
-| 📊 **Analysis Summary** | Overview of predictions, target genes, and hypotheses count |
-| 🔮 **Function Predictions** | Detailed predictions with confidence badges, mechanisms, evidence, and disease associations |
-| 🕸️ **Gene Regulatory Network** | Visual network diagram showing gene interactions (activation/repression relationships) |
-| 📋 **Target Genes Table** | Structured table with gene names, relationship types, and strength values |
-| 💡 **Research Hypotheses** | Complete experimental designs with approaches, expected outcomes, resources, and timelines |
-
-**PDF Features:**
-- 🎨 **Professional Styling:** Color-coded sections with gradient headers matching the app theme
-- 📈 **Visual Network Chart:** Embedded SVG-to-PNG conversion of the regulatory network visualization
-- 🏷️ **Confidence Badges:** Color-coded confidence indicators (green 80%+, blue 60-79%, yellow 40-59%)
-- 📑 **Multi-Page Support:** Automatic pagination with page numbers and footer branding
-- ⏰ **Timestamp:** Report generation date and time for record-keeping
-
-**How to Export:**
 ```
-1. Run a DNA sequence analysis
-2. Review your results in the interface
-3. Click "Export PDF" button in the left sidebar
-4. PDF automatically downloads with timestamped filename
+┌─────────────────────────────────────────────────────────────────┐
+│                    📄 PDF EXPORT BENEFITS                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🔬 RESEARCH                    📊 COLLABORATION                 │
+│  ├── Lab notebook records       ├── Share with colleagues       │
+│  ├── Grant applications         ├── Team presentations          │
+│  ├── Thesis documentation       ├── Email attachments           │
+│  └── Publication supplements    └── Cross-institution sharing   │
+│                                                                  │
+│  📁 ARCHIVAL                    🎓 EDUCATION                     │
+│  ├── Long-term storage          ├── Student assignments         │
+│  ├── Audit trails               ├── Course materials            │
+│  ├── Reproducibility records    ├── Workshop handouts           │
+│  └── Version control            └── Self-study reference        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Example PDF Structure:**
+#### What's Included in the PDF
+
+| Section | Description | Visual |
+|---------|-------------|--------|
+| 📊 **Analysis Summary** | Overview of predictions, target genes, and hypotheses count | Stats dashboard |
+| 🔮 **Function Predictions** | Detailed predictions with confidence badges, mechanisms, evidence | Color-coded cards |
+| 🕸️ **Network Visualization** | **Embedded gene regulatory network diagram** | Full chart image |
+| 📋 **Target Genes Table** | Structured table with relationships and strength values | Formatted table |
+| 💡 **Research Hypotheses** | Complete experimental designs with timelines | Protocol cards |
+
+#### Network Visualization in PDF — The Game Changer
+
+**Before (Without Network):**
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  DNA Sequence Analysis Report          [Date & Time]        │
-│━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│                                                             │
-│  📊 Analysis Summary                                        │
-│  ├── 4 Function Predictions                                 │
-│  ├── 6 Target Genes                                         │
-│  └── 3 Research Hypotheses                                  │
-│                                                             │
-│  🔮 Function Predictions                                    │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ 1. Cardiac-Specific Enhancer           [85%] ██████ │   │
-│  │    Category: Gene Regulation                        │   │
-│  │    Mechanism: Contains GATA4 binding motifs...      │   │
-│  │    Evidence: • H3K27ac marks                        │   │
-│  │              • DNase hypersensitive site            │   │
-│  │    Diseases: Congenital heart defects               │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  🕸️ Regulatory Network - Target Genes                      │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │          [Network Visualization Chart]              │   │
-│  │     ●───────→ GATA4  (Activation)                   │   │
-│  │    DNA        ●───────→ NKX2-5 (Activation)         │   │
-│  │     ●─────────┤ TP53  (Repression)                  │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌──────────┬─────────────┬──────────┬──────────────┐     │
-│  │ Gene     │ Relationship │ Strength │ Description  │     │
-│  ├──────────┼─────────────┼──────────┼──────────────┤     │
-│  │ GATA4    │ Activation  │ 85%      │ Cardiac TF   │     │
-│  │ NKX2-5   │ Activation  │ 72%      │ Heart dev.   │     │
-│  └──────────┴─────────────┴──────────┴──────────────┘     │
-│                                                             │
-│  💡 Research Hypotheses                                     │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ Hypothesis 1: Luciferase Assay                      │   │
-│  │ Statement: This sequence functions as...            │   │
-│  │ Approach: Clone into reporter vector...             │   │
-│  │ Expected: 3-5 fold increase in expression           │   │
-│  │ Resources: Standard molecular biology               │   │
-│  │ Timeline: 2-3 weeks                                 │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│                    Page 1 of 2                              │
-│  Generated by ncRNA Function Predictor                      │
-└─────────────────────────────────────────────────────────────┘
+❌ Text-only gene lists
+❌ No visual relationship context
+❌ Difficult to identify patterns
+❌ Less engaging for presentations
 ```
 
-**Technical Implementation:**
-- Built with **jsPDF** library for client-side PDF generation
-- SVG-to-Canvas conversion for embedding network visualizations
-- Responsive text wrapping for long descriptions
-- Automatic page break detection to prevent content overflow
+**After (With Embedded Network):**
+```
+✅ Visual gene interaction map
+✅ Color-coded activation/repression
+✅ Line thickness shows strength
+✅ Publication-ready figures
+✅ Immediate pattern recognition
+```
+
+#### PDF Visual Quality Features
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│   🎨 PROFESSIONAL STYLING                                        │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  • Gradient headers (Blue → Purple theme)               │   │
+│   │  • Consistent typography and spacing                    │   │
+│   │  • Branded footer on every page                         │   │
+│   │  • Page numbers for easy navigation                     │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│   📈 CONFIDENCE VISUALIZATION                                    │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  🟢 80-100%  High Confidence   ████████████             │   │
+│   │  🔵 60-79%   Good Confidence   ████████░░░░             │   │
+│   │  🟡 40-59%   Moderate          █████░░░░░░░             │   │
+│   │  ⚪ <40%     Low Confidence    ███░░░░░░░░░             │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│   🖼️ NETWORK CHART EMBEDDING                                    │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  • SVG → PNG conversion for universal compatibility     │   │
+│   │  • 600x400 resolution maintains clarity                 │   │
+│   │  • White background for print-friendliness              │   │
+│   │  • Preserves all node labels and connections            │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Step-by-Step Export Guide
+
+```
+  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+  │   STEP 1     │     │   STEP 2     │     │   STEP 3     │
+  │              │────▶│              │────▶│              │
+  │  🧬 Analyze  │     │  📊 Review   │     │  📄 Export   │
+  │   Sequence   │     │   Results    │     │     PDF      │
+  └──────────────┘     └──────────────┘     └──────────────┘
+        │                    │                    │
+        ▼                    ▼                    ▼
+  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+  │ Paste/Upload │     │ • Predictions│     │ Click Export │
+  │ DNA sequence │     │ • Network    │     │ PDF button   │
+  │ & click      │     │ • Hypotheses │     │ in sidebar   │
+  │ "Analyze"    │     │ all visible  │     │              │
+  └──────────────┘     └──────────────┘     └──────────────┘
+                                                  │
+                                                  ▼
+                                           ┌──────────────┐
+                                           │   📥 Auto    │
+                                           │   Download   │
+                                           │              │
+                                           │ dna-analysis-│
+                                           │ report-      │
+                                           │ 2025-01-15   │
+                                           │ .pdf         │
+                                           └──────────────┘
+```
+
+#### Example PDF Report Structure
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ████████████████████████████████████████████████████████████   │
+│  █                                                           █   │
+│  █  DNA Sequence Analysis Report                             █   │
+│  █  Generated: January 15, 2025 at 2:30 PM                   █   │
+│  █                                                           █   │
+│  ████████████████████████████████████████████████████████████   │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  📊 Analysis Summary                                    │     │
+│  │  ══════════════════════════════════════════════════════│     │
+│  │  4 Function Predictions │ 6 Target Genes │ 3 Hypotheses│     │
+│  └────────────────────────────────────────────────────────┘     │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  🔮 Function Predictions                                │     │
+│  │  ══════════════════════════════════════════════════════│     │
+│  │                                                         │     │
+│  │  ┌──────────────────────────────────────────────┐      │     │
+│  │  │ 1. Cardiac-Specific Enhancer        [85%] 🟢│      │     │
+│  │  │    Category: Gene Regulation                 │      │     │
+│  │  │    Mechanism: Contains GATA4 and NKX2-5     │      │     │
+│  │  │    binding motifs characteristic of...       │      │     │
+│  │  │                                              │      │     │
+│  │  │    Evidence:                                 │      │     │
+│  │  │    • H3K27ac marks in cardiac tissue        │      │     │
+│  │  │    • DNase hypersensitive site              │      │     │
+│  │  │                                              │      │     │
+│  │  │    Disease Associations:                     │      │     │
+│  │  │    Congenital heart defects, Cardiomyopathy │      │     │
+│  │  └──────────────────────────────────────────────┘      │     │
+│  └────────────────────────────────────────────────────────┘     │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  🕸️ Regulatory Network - Target Genes                  │     │
+│  │  ══════════════════════════════════════════════════════│     │
+│  │                                                         │     │
+│  │  ┌──────────────────────────────────────────────┐      │     │
+│  │  │                                              │      │     │
+│  │  │        🟢 GATA4          🟢 NKX2-5          │      │     │
+│  │  │           ╲                ╱                 │      │     │
+│  │  │            ╲              ╱                  │      │     │
+│  │  │             ╲            ╱                   │      │     │
+│  │  │              🔵 DNA 🔵                       │      │     │
+│  │  │              SEQUENCE                        │      │     │
+│  │  │             ╱            ╲                   │      │     │
+│  │  │            ╱              ╲                  │      │     │
+│  │  │           ╱                ╲                 │      │     │
+│  │  │        🟢 MEF2C          🔴 TP53            │      │     │
+│  │  │                                              │      │     │
+│  │  │  ━━━ Activation  ─── Repression             │      │     │
+│  │  └──────────────────────────────────────────────┘      │     │
+│  │                                                         │     │
+│  │  ┌────────┬─────────────┬──────────┬────────────┐     │     │
+│  │  │ Gene   │ Relationship│ Strength │ Description│     │     │
+│  │  ├────────┼─────────────┼──────────┼────────────┤     │     │
+│  │  │ GATA4  │ Activation  │ 85%      │ Cardiac TF │     │     │
+│  │  │ NKX2-5 │ Activation  │ 72%      │ Heart dev. │     │     │
+│  │  │ MEF2C  │ Activation  │ 68%      │ Muscle TF  │     │     │
+│  │  │ TP53   │ Repression  │ 45%      │ Tumor sup. │     │     │
+│  │  └────────┴─────────────┴──────────┴────────────┘     │     │
+│  └────────────────────────────────────────────────────────┘     │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────┐     │
+│  │  💡 Research Hypotheses                                 │     │
+│  │  ══════════════════════════════════════════════════════│     │
+│  │                                                         │     │
+│  │  Hypothesis 1: Luciferase Reporter Assay               │     │
+│  │  ─────────────────────────────────────────             │     │
+│  │  Statement: This sequence functions as a cardiac-      │     │
+│  │  specific enhancer that activates downstream genes...  │     │
+│  │                                                         │     │
+│  │  Experimental Approach:                                 │     │
+│  │  Clone sequence upstream of minimal promoter in        │     │
+│  │  pGL4 vector, transfect into cardiomyocytes...        │     │
+│  │                                                         │     │
+│  │  Expected Outcome:                                      │     │
+│  │  3-5 fold increase in luciferase activity compared    │     │
+│  │  to empty vector control                               │     │
+│  │                                                         │     │
+│  │  Resources: Standard molecular biology equipment       │     │
+│  │  Timeline: 2-3 weeks                                   │     │
+│  └────────────────────────────────────────────────────────┘     │
+│                                                                  │
+│  ─────────────────────────────────────────────────────────────  │
+│  Generated by ncRNA Function Predictor              Page 1 of 2  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Technical Implementation Details
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| 📄 **PDF Engine** | jsPDF | Client-side PDF generation |
+| 🖼️ **SVG Conversion** | Canvas API | Convert network SVG to PNG |
+| 📏 **Layout Engine** | Custom helpers | Auto pagination & text wrapping |
+| 🎨 **Styling** | RGB color codes | Match app theme in PDF |
+| 📦 **Bundling** | Single-file output | No external dependencies |
+
+#### Use Cases for PDF Export
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│  👩‍🔬 RESEARCHER                   👨‍⚕️ CLINICIAN                  │
+│  ┌─────────────────────┐         ┌─────────────────────┐       │
+│  │ • Grant proposals   │         │ • Patient reports   │       │
+│  │ • Lab notebooks     │         │ • Clinical notes    │       │
+│  │ • Paper supplements │         │ • Team briefings    │       │
+│  │ • Thesis chapters   │         │ • Case studies      │       │
+│  └─────────────────────┘         └─────────────────────┘       │
+│                                                                  │
+│  👩‍🏫 EDUCATOR                     👨‍💼 BIOTECH                     │
+│  ┌─────────────────────┐         ┌─────────────────────┐       │
+│  │ • Course materials  │         │ • Investor decks    │       │
+│  │ • Student handouts  │         │ • IP documentation  │       │
+│  │ • Workshop guides   │         │ • Partner reports   │       │
+│  │ • Assessment refs   │         │ • Audit trails      │       │
+│  └─────────────────────┘         └─────────────────────┘       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
