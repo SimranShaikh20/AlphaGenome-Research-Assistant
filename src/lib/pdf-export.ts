@@ -5,6 +5,7 @@ interface ExportData {
   predictions: FunctionPrediction[];
   targetGenes: TargetGene[];
   hypotheses: Hypothesis[];
+  networkImageDataUrl?: string;
 }
 
 export const exportToPDF = (data: ExportData) => {
@@ -145,6 +146,15 @@ export const exportToPDF = (data: ExportData) => {
   pdf.setTextColor(255, 255, 255);
   pdf.text('Regulatory Network - Target Genes', margin + 5, yPos + 4);
   yPos += 15;
+
+  // Add network visualization image if available
+  if (data.networkImageDataUrl) {
+    checkNewPage(100);
+    const imgWidth = contentWidth;
+    const imgHeight = (imgWidth * 400) / 600; // Maintain 600x400 aspect ratio
+    pdf.addImage(data.networkImageDataUrl, 'PNG', margin, yPos, imgWidth, imgHeight);
+    yPos += imgHeight + 10;
+  }
 
   // Table header
   pdf.setFillColor(240, 240, 250);

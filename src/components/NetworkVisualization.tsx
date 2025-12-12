@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,10 +15,19 @@ interface NetworkVisualizationProps {
   sequenceType?: string;
 }
 
-export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence' }: NetworkVisualizationProps) {
+export interface NetworkVisualizationRef {
+  getSvgRef: () => SVGSVGElement | null;
+}
+
+export const NetworkVisualization = forwardRef<NetworkVisualizationRef, NetworkVisualizationProps>(
+  ({ targetGenes, sequenceType = 'DNA Sequence' }, ref) => {
   const [zoom, setZoom] = useState(1);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getSvgRef: () => svgRef.current
+  }));
 
   const nodes = useMemo(() => {
     const centerX = 300;
@@ -316,4 +325,6 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
       </div>
     </div>
   );
-}
+});
+
+NetworkVisualization.displayName = 'NetworkVisualization';
