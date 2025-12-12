@@ -319,6 +319,92 @@ flowchart TD
 - PNG/SVG images
 - CSV tables
 
+### 8. 📄 Comprehensive PDF Report Export
+
+**NEW FEATURE:** Generate professional, publication-ready PDF reports with complete analysis results.
+
+**What's Included in the PDF:**
+
+| Section | Description |
+|---------|-------------|
+| 📊 **Analysis Summary** | Overview of predictions, target genes, and hypotheses count |
+| 🔮 **Function Predictions** | Detailed predictions with confidence badges, mechanisms, evidence, and disease associations |
+| 🕸️ **Gene Regulatory Network** | Visual network diagram showing gene interactions (activation/repression relationships) |
+| 📋 **Target Genes Table** | Structured table with gene names, relationship types, and strength values |
+| 💡 **Research Hypotheses** | Complete experimental designs with approaches, expected outcomes, resources, and timelines |
+
+**PDF Features:**
+- 🎨 **Professional Styling:** Color-coded sections with gradient headers matching the app theme
+- 📈 **Visual Network Chart:** Embedded SVG-to-PNG conversion of the regulatory network visualization
+- 🏷️ **Confidence Badges:** Color-coded confidence indicators (green 80%+, blue 60-79%, yellow 40-59%)
+- 📑 **Multi-Page Support:** Automatic pagination with page numbers and footer branding
+- ⏰ **Timestamp:** Report generation date and time for record-keeping
+
+**How to Export:**
+```
+1. Run a DNA sequence analysis
+2. Review your results in the interface
+3. Click "Export PDF" button in the left sidebar
+4. PDF automatically downloads with timestamped filename
+```
+
+**Example PDF Structure:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DNA Sequence Analysis Report          [Date & Time]        │
+│━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                             │
+│  📊 Analysis Summary                                        │
+│  ├── 4 Function Predictions                                 │
+│  ├── 6 Target Genes                                         │
+│  └── 3 Research Hypotheses                                  │
+│                                                             │
+│  🔮 Function Predictions                                    │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ 1. Cardiac-Specific Enhancer           [85%] ██████ │   │
+│  │    Category: Gene Regulation                        │   │
+│  │    Mechanism: Contains GATA4 binding motifs...      │   │
+│  │    Evidence: • H3K27ac marks                        │   │
+│  │              • DNase hypersensitive site            │   │
+│  │    Diseases: Congenital heart defects               │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  🕸️ Regulatory Network - Target Genes                      │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │          [Network Visualization Chart]              │   │
+│  │     ●───────→ GATA4  (Activation)                   │   │
+│  │    DNA        ●───────→ NKX2-5 (Activation)         │   │
+│  │     ●─────────┤ TP53  (Repression)                  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌──────────┬─────────────┬──────────┬──────────────┐     │
+│  │ Gene     │ Relationship │ Strength │ Description  │     │
+│  ├──────────┼─────────────┼──────────┼──────────────┤     │
+│  │ GATA4    │ Activation  │ 85%      │ Cardiac TF   │     │
+│  │ NKX2-5   │ Activation  │ 72%      │ Heart dev.   │     │
+│  └──────────┴─────────────┴──────────┴──────────────┘     │
+│                                                             │
+│  💡 Research Hypotheses                                     │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ Hypothesis 1: Luciferase Assay                      │   │
+│  │ Statement: This sequence functions as...            │   │
+│  │ Approach: Clone into reporter vector...             │   │
+│  │ Expected: 3-5 fold increase in expression           │   │
+│  │ Resources: Standard molecular biology               │   │
+│  │ Timeline: 2-3 weeks                                 │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│                    Page 1 of 2                              │
+│  Generated by ncRNA Function Predictor                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Technical Implementation:**
+- Built with **jsPDF** library for client-side PDF generation
+- SVG-to-Canvas conversion for embedding network visualizations
+- Responsive text wrapping for long descriptions
+- Automatic page break detection to prevent content overflow
+
 ---
 
 ## 🚀 Installation & Setup
