@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Network, ZoomIn, ZoomOut, Download, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import type { TargetGene } from '@/lib/dna-utils';
 
 interface NetworkVisualizationProps {
@@ -17,6 +18,7 @@ interface NetworkVisualizationProps {
 export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence' }: NetworkVisualizationProps) {
   const [zoom, setZoom] = useState(1);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const nodes = useMemo(() => {
     const centerX = 300;
@@ -43,6 +45,44 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
   const handleReset = () => {
     setZoom(1);
     setSelectedNode(null);
+  };
+
+  const handleDownload = () => {
+    if (!svgRef.current) {
+      toast.error('No chart to download');
+      return;
+    }
+
+    try {
+      // Clone the SVG to avoid modifying the original
+      const svgClone = svgRef.current.cloneNode(true) as SVGSVGElement;
+      svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      svgClone.style.transform = 'none';
+      
+      // Add white background
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bg.setAttribute('width', '600');
+      bg.setAttribute('height', '400');
+      bg.setAttribute('fill', 'white');
+      svgClone.insertBefore(bg, svgClone.firstChild);
+
+      const svgData = new XMLSerializer().serializeToString(svgClone);
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `gene-network-${new Date().toISOString().split('T')[0]}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Network chart downloaded');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download chart');
+    }
   };
 
   if (targetGenes.length === 0) {
@@ -82,7 +122,7 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
             <RotateCcw className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload}>
             <Download className="w-4 h-4" />
           </Button>
         </div>
@@ -90,6 +130,7 @@ export function NetworkVisualization({ targetGenes, sequenceType = 'DNA Sequence
 
       <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl overflow-hidden border border-border/50" style={{ height: 400 }}>
         <svg
+          ref={svgRef}
           viewBox="0 0 600 400"
           className="w-full h-full"
           style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
